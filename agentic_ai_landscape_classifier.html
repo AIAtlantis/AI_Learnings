@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic AI Landscape Classifier</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f3;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #6b6b68;
+    --color-text-tertiary: #a0a09c;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --color-border-secondary: rgba(0,0,0,0.22);
+    --color-border-primary: rgba(0,0,0,0.35);
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1e1e1c;
+      --color-background-secondary: #2a2a28;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #a0a09c;
+      --color-text-tertiary: #6b6b68;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.2);
+      --color-border-primary: rgba(255,255,255,0.32);
+    }
+  }
+  body { font-family: var(--font-sans); background: var(--color-background-secondary); color: var(--color-text-primary); padding: 2rem 1rem; min-height: 100vh; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .hdr { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .hdr h2 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .filters select { font-size: 13px; padding: 6px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--color-background-primary); border-radius: var(--border-radius-md); padding: 10px 12px; border: 0.5px solid var(--color-border-tertiary); }
+  .stat-n { font-size: 22px; font-weight: 500; color: var(--color-text-primary); line-height: 1.2; }
+  .stat-l { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .tier-block { margin-bottom: 1.5rem; }
+  .tier-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tier-badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .tier-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .tier-count { font-size: 12px; color: var(--color-text-secondary); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px; cursor: pointer; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--color-border-primary); }
+  .card.expanded { border-color: var(--color-border-secondary); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .card-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
+  .card-product { font-size: 12px; color: var(--color-text-secondary); margin-top: 1px; }
+  .ind-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+  .card-meta { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+  .card-meta b { color: var(--color-text-primary); font-weight: 500; }
+  .expand-area { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--color-border-tertiary); font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; display: none; }
+  .expand-area.show { display: block; }
+  .stack-pill { display: inline-block; background: var(--color-background-secondary); border-radius: 4px; padding: 1px 6px; margin: 1px 2px 1px 0; font-size: 11px; color: var(--color-text-secondary); }
+  .empty { text-align: center; padding: 2rem; color: var(--color-text-secondary); font-size: 14px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .toggle-hint { text-align: center; margin-top: 8px; font-size: 11px; color: var(--color-text-tertiary); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr"><h2>Agentic AI landscape classifier</h2></div>
+  <p class="sub">From frontier model builders to local AI boutiques — 7 tiers, 32 entities classified by industry, usage, stack &amp; workforce location. Click any card to expand details.</p>
+  <div class="filters">
+    <select id="f-tier"><option value="">All tiers</option></select>
+    <select id="f-ind"><option value="">All industries</option></select>
+    <select id="f-region"><option value="">All regions</option></select>
+    <select id="f-stack"><option value="">All stacks</option></select>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="legend" id="legend"></div>
+  <div id="content"></div>
+</div>
+<script>
+const TIERS = [
+  {id:1,label:"Tier 1 — Foundational model builders",short:"Foundational",color:"#534AB7",bg:"#EEEDFE",tc:"#3C3489"},
+  {id:2,label:"Tier 2 — Agentic orchestration & frameworks",short:"Orchestration",color:"#1D9E75",bg:"#E1F5EE",tc:"#085041"},
+  {id:3,label:"Tier 3 — Hyperscaler cloud platforms",short:"Hyperscaler",color:"#BA7517",bg:"#FAEEDA",tc:"#633806"},
+  {id:4,label:"Tier 4 — Enterprise vertical applications",short:"Enterprise Apps",color:"#D85A30",bg:"#FAECE7",tc:"#712B13"},
+  {id:5,label:"Tier 5 — Mid-market startup products",short:"Mid-Market",color:"#378ADD",bg:"#E6F1FB",tc:"#0C447C"},
+  {id:6,label:"Tier 6 — SMB / no-code builders",short:"SMB/No-Code",color:"#639922",bg:"#EAF3DE",tc:"#27500A"},
+  {id:7,label:"Tier 7 — Mom & pop / local AI",short:"Local AI",color:"#888780",bg:"#F1EFE8",tc:"#444441"},
+];
+const IND_COLORS = {
+  "General AI":"#534AB7","Developer Tools":"#1D9E75","Cloud Computing":"#BA7517","CRM / SaaS":"#D85A30",
+  "Legal":"#D4537E","Healthcare":"#E24B4A","Enterprise Search":"#378ADD","Marketing / Content":"#BA7517",
+  "IT Automation":"#1D9E75","Autonomous Vehicles":"#888780","Software Dev":"#185FA5","Search / Research":"#534AB7",
+  "Marketing":"#639922","Video / Media":"#D85A30","Productivity":"#1D9E75","Automation":"#BA7517",
+  "Conversational AI":"#534AB7","Enterprise AI":"#378ADD","Consulting":"#888780","Marketing / SMB":"#639922","Various":"#888780"
+};
+const DATA = [
+  {t:1,n:"Anthropic",p:"Claude",ind:"General AI",u:"~100M users",rev:"$1B+ ARR",stack:["Constitutional AI","RLHF","Python","AWS"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · London UK",emp:"~1,000",region:"North America"},
+  {t:1,n:"OpenAI",p:"GPT-4o / o1",ind:"General AI",u:"~300M users",rev:"$3.7B+ ARR",stack:["RLHF","Python","Azure","Triton"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Seattle WA",emp:"~3,000",region:"North America"},
+  {t:1,n:"Google DeepMind",p:"Gemini",ind:"General AI",u:"2B+ via Google",rev:"Alphabet segment",stack:["TPUs","JAX","Python","GCP"],hq:"Mountain View, CA, USA",wf:"Mountain View CA · London UK · Zürich CH",emp:"~30,000",region:"North America"},
+  {t:1,n:"Meta AI",p:"Llama 3",ind:"General AI",u:"Billions (open weights)",rev:"Open source",stack:["PyTorch","Python","CUDA","Triton"],hq:"Menlo Park, CA, USA",wf:"Menlo Park CA · NYC NY · London UK",emp:"~70,000",region:"North America"},
+  {t:1,n:"Mistral AI",p:"Mistral / Mixtral",ind:"General AI",u:"~50M developers",rev:"$50M+ ARR",stack:["Python","vLLM","AWS","GCP"],hq:"Paris, France",wf:"Paris France · San Francisco CA",emp:"~250",region:"Europe"},
+  {t:1,n:"xAI",p:"Grok",ind:"General AI",u:"~50M X Premium users",rev:"$6B raised",stack:["Python","CUDA","Custom HW"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Austin TX",emp:"~500",region:"North America"},
+  {t:2,n:"LangChain",p:"LangChain / LangGraph",ind:"Developer Tools",u:"1M+ developers",rev:"$25M ARR est.",stack:["Python","TypeScript","Redis","PostgreSQL"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Remote global",emp:"~100",region:"North America"},
+  {t:2,n:"Microsoft AutoGen",p:"AutoGen / Magentic-One",ind:"Developer Tools",u:"500K+ developers",rev:"Open source / MSFT",stack:["Python","TypeScript","Azure"],hq:"Redmond, WA, USA",wf:"Redmond WA · Bangalore IN · Beijing CN",emp:"~220,000 (MSFT)",region:"North America"},
+  {t:2,n:"CrewAI",p:"CrewAI",ind:"Developer Tools",u:"~500K developers",rev:"$18M ARR est.",stack:["Python","LangChain","FastAPI"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Brazil",emp:"~50",region:"North America"},
+  {t:2,n:"LlamaIndex",p:"LlamaIndex / LlamaCloud",ind:"Developer Tools",u:"~800K developers",rev:"$10M ARR est.",stack:["Python","TypeScript","Vector DBs"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Remote global",emp:"~60",region:"North America"},
+  {t:2,n:"deepset / Haystack",p:"Haystack",ind:"Developer Tools",u:"~300K developers",rev:"$10M ARR est.",stack:["Python","Docker","Elasticsearch"],hq:"Berlin, Germany",wf:"Berlin Germany · Remote Europe",emp:"~80",region:"Europe"},
+  {t:3,n:"Amazon Web Services",p:"Bedrock Agents",ind:"Cloud Computing",u:"Millions of enterprises",rev:"$100B+ AWS",stack:["Python","AWS Lambda","S3","Titan"],hq:"Seattle, WA, USA",wf:"Seattle WA · Arlington VA · Bangalore IN · Dublin IE",emp:"~1.5M",region:"North America"},
+  {t:3,n:"Google Cloud",p:"Vertex AI Agents",ind:"Cloud Computing",u:"Millions of enterprises",rev:"$36B+ GCP",stack:["Python","TensorFlow","GCP","Gemini"],hq:"Sunnyvale, CA, USA",wf:"Sunnyvale CA · NYC NY · London UK · Bangalore IN",emp:"~180,000",region:"North America"},
+  {t:3,n:"Microsoft Azure",p:"Azure AI Foundry",ind:"Cloud Computing",u:"Millions of enterprises",rev:"$110B+ Azure",stack:["Python",".NET","Azure OpenAI","Copilot"],hq:"Redmond, WA, USA",wf:"Redmond WA · NYC NY · Dublin IE · Hyderabad IN",emp:"~220,000",region:"North America"},
+  {t:3,n:"Salesforce",p:"Agentforce",ind:"CRM / SaaS",u:"150,000+ companies",rev:"$34B+ ARR",stack:["Apex","Python","Einstein AI","Heroku"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Indianapolis IN · Hyderabad IN · Dublin IE",emp:"~70,000",region:"North America"},
+  {t:4,n:"Harvey AI",p:"Harvey",ind:"Legal",u:"~40,000 lawyers",rev:"$100M ARR",stack:["Claude","GPT-4","Python","RAG"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · NYC NY · London UK",emp:"~200",region:"North America"},
+  {t:4,n:"Abridge",p:"Abridge",ind:"Healthcare",u:"~250 health systems",rev:"$150M raised",stack:["Python","NLP","Epic EHR","AWS"],hq:"Pittsburgh, PA, USA",wf:"Pittsburgh PA · Remote",emp:"~200",region:"North America"},
+  {t:4,n:"Glean",p:"Glean Work AI",ind:"Enterprise Search",u:"~800 enterprises",rev:"$100M+ ARR",stack:["Python","Elasticsearch","Kubernetes","GCP"],hq:"Palo Alto, CA, USA",wf:"Palo Alto CA · NYC NY · Bangalore IN",emp:"~700",region:"North America"},
+  {t:4,n:"Writer",p:"Writer AI",ind:"Marketing / Content",u:"~500 enterprises",rev:"$100M+ ARR",stack:["Python","Custom LLM","RAG","AWS"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · NYC NY · Remote",emp:"~300",region:"North America"},
+  {t:4,n:"Moveworks",p:"Moveworks",ind:"IT Automation",u:"~300 enterprises",rev:"$100M+ ARR",stack:["Python","NLP","ServiceNow","ITSM APIs"],hq:"Mountain View, CA, USA",wf:"Mountain View CA · Bangalore IN",emp:"~700",region:"North America"},
+  {t:4,n:"Waymo",p:"Waymo One",ind:"Autonomous Vehicles",u:"50,000+ rides/week",rev:"$300M est.",stack:["Python","C++","TensorFlow","LiDAR"],hq:"Mountain View, CA, USA",wf:"Mountain View CA · Phoenix AZ · San Francisco CA",emp:"~2,500",region:"North America"},
+  {t:5,n:"Cognition AI",p:"Devin",ind:"Software Dev",u:"~50,000 developers",rev:"$2B valuation",stack:["Python","Sandbox VMs","Claude","GPT-4"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Remote",emp:"~50",region:"North America"},
+  {t:5,n:"Cursor",p:"Cursor IDE",ind:"Software Dev",u:"~500K developers",rev:"$100M+ ARR",stack:["TypeScript","Electron","Claude","GPT-4"],hq:"San Francisco, CA, USA",wf:"San Francisco CA",emp:"~50",region:"North America"},
+  {t:5,n:"Perplexity AI",p:"Perplexity",ind:"Search / Research",u:"~15M DAU",rev:"$70M+ ARR",stack:["Python","Custom LLM","RAG","AWS"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Remote",emp:"~200",region:"North America"},
+  {t:5,n:"Jasper",p:"Jasper AI",ind:"Marketing",u:"~100K businesses",rev:"$90M ARR",stack:["GPT-4","Claude","Python","React"],hq:"Austin, TX, USA",wf:"Austin TX · Remote USA",emp:"~500",region:"North America"},
+  {t:5,n:"Synthesia",p:"Synthesia",ind:"Video / Media",u:"~55,000 companies",rev:"$50M+ ARR",stack:["Python","Deep Learning","GAN","AWS"],hq:"London, UK",wf:"London UK · NYC NY · Remote",emp:"~400",region:"Europe"},
+  {t:5,n:"Otter.ai",p:"Otter.ai",ind:"Productivity",u:"~10M users",rev:"$40M+ ARR",stack:["Python","ASR","NLP","AWS"],hq:"Mountain View, CA, USA",wf:"Mountain View CA · Beijing CN",emp:"~200",region:"North America"},
+  {t:6,n:"Zapier",p:"Zapier AI Agents",ind:"Automation",u:"~2.5M users",rev:"$140M ARR",stack:["Node.js","Python","REST APIs","AWS"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Remote global",emp:"~800",region:"North America"},
+  {t:6,n:"Voiceflow",p:"Voiceflow",ind:"Conversational AI",u:"~250K developers",rev:"$30M+ ARR",stack:["Node.js","React","NLU APIs","AWS"],hq:"Toronto, ON, Canada",wf:"Toronto Canada · NYC NY · Remote",emp:"~200",region:"North America"},
+  {t:6,n:"n8n",p:"n8n",ind:"Automation",u:"~400K users",rev:"$20M+ ARR",stack:["Node.js","TypeScript","Docker","Self-hosted"],hq:"Berlin, Germany",wf:"Berlin Germany · Remote Europe",emp:"~150",region:"Europe"},
+  {t:6,n:"Stack AI",p:"Stack AI",ind:"Enterprise AI",u:"~20K teams",rev:"$5M+ ARR",stack:["Python","React","Claude","GPT-4"],hq:"San Francisco, CA, USA",wf:"San Francisco CA · Remote",emp:"~20",region:"North America"},
+  {t:6,n:"Botpress",p:"Botpress",ind:"Conversational AI",u:"~750K developers",rev:"$15M+ ARR",stack:["TypeScript","Node.js","NLU","Docker"],hq:"Quebec City, QC, Canada",wf:"Quebec City Canada · Remote",emp:"~150",region:"North America"},
+  {t:7,n:"Local AI consultants",p:"Custom GPT / agent builds",ind:"Consulting",u:"1–50 clients",rev:"$50K–$500K",stack:["ChatGPT","Zapier","Make","No-code"],hq:"Distributed, USA",wf:"Local city / Remote USA",emp:"1–5",region:"North America"},
+  {t:7,n:"Small AI agencies",p:"Branded AI chatbots",ind:"Marketing / SMB",u:"5–100 clients",rev:"$100K–$2M",stack:["Voiceflow","Botpress","Zapier","OpenAI API"],hq:"Various cities, USA",wf:"Local city / Hybrid",emp:"5–25",region:"North America"},
+  {t:7,n:"Industry-specific boutiques",p:"Vertical AI tools",ind:"Various",u:"10–200 clients",rev:"$200K–$5M",stack:["Claude API","OpenAI","Streamlit","Python"],hq:"Frisco TX · Austin TX · Various",wf:"Local metro area",emp:"5–30",region:"North America"},
+];
+
+let expanded = {};
+let filters = {tier:"",ind:"",region:"",stack:""};
+
+function uniqueVals(key) {
+  const s = new Set();
+  DATA.forEach(d => { if(key==="stack") d.stack.forEach(x=>s.add(x)); else s.add(d[key]); });
+  return [...s].sort();
+}
+
+function populateFilters() {
+  const tf = document.getElementById("f-tier");
+  TIERS.forEach(t => { const o = document.createElement("option"); o.value=t.id; o.textContent=t.label; tf.appendChild(o); });
+  ["ind","region","stack"].forEach(key => {
+    const el = document.getElementById("f-"+key);
+    uniqueVals(key).forEach(v => { const o = document.createElement("option"); o.value=v; o.textContent=v; el.appendChild(o); });
+  });
+  ["f-tier","f-ind","f-region","f-stack"].forEach(id => {
+    document.getElementById(id).addEventListener("change", e => { filters[id.replace("f-","")]=e.target.value; render(); });
+  });
+}
+
+function filterData() {
+  return DATA.filter(d => {
+    if(filters.tier && d.t!=filters.tier) return false;
+    if(filters.ind && d.ind!==filters.ind) return false;
+    if(filters.region && d.region!==filters.region) return false;
+    if(filters.stack && !d.stack.includes(filters.stack)) return false;
+    return true;
+  });
+}
+
+function renderStats(data) {
+  const inds = new Set(data.map(d=>d.ind));
+  const trs = new Set(data.map(d=>d.t));
+  const regions = new Set(data.map(d=>d.region));
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="stat-n">${data.length}</div><div class="stat-l">companies / entities</div></div>
+    <div class="stat"><div class="stat-n">${trs.size}</div><div class="stat-l">tiers represented</div></div>
+    <div class="stat"><div class="stat-n">${inds.size}</div><div class="stat-l">industries covered</div></div>
+    <div class="stat"><div class="stat-n">${regions.size}</div><div class="stat-l">global regions</div></div>
+  `;
+}
+
+function renderLegend() {
+  document.getElementById("legend").innerHTML = TIERS.map(t=>`<div class="leg-item"><div class="leg-dot" style="background:${t.color}"></div><span>${t.short}</span></div>`).join("");
+}
+
+function indBg(ind) {
+  const c = IND_COLORS[ind]||"#888780";
+  return {color:c, bg:c+"22"};
+}
+
+function cardHTML(d, idx) {
+  const ic = indBg(d.ind);
+  const isExp = expanded[idx];
+  return `<div class="card${isExp?" expanded":""}" onclick="toggle(${idx})">
+    <div class="card-top">
+      <div>
+        <div class="card-name">${d.n}</div>
+        <div class="card-product">${d.p}</div>
+      </div>
+      <span class="ind-badge" style="background:${ic.bg};color:${ic.color}">${d.ind}</span>
+    </div>
+    <div class="card-meta">
+      <div><b>Usage:</b> ${d.u}</div>
+      <div><b>Revenue:</b> ${d.rev}</div>
+      <div><b>HQ:</b> ${d.hq}</div>
+    </div>
+    <div class="expand-area${isExp?" show":""}">
+      <div style="margin-bottom:6px"><b>Tech stack:</b></div>
+      <div style="margin-bottom:8px">${d.stack.map(s=>`<span class="stack-pill">${s}</span>`).join("")}</div>
+      <div><b>Workforce:</b> ${d.wf}</div>
+      <div><b>Employees:</b> ${d.emp}</div>
+    </div>
+    <div class="toggle-hint">${isExp?"▲ collapse":"▼ details"}</div>
+  </div>`;
+}
+
+function render() {
+  const data = filterData();
+  renderStats(data);
+  const content = document.getElementById("content");
+  if(!data.length) { content.innerHTML='<div class="empty">No companies match the selected filters.</div>'; return; }
+  let html = "";
+  TIERS.forEach(tier => {
+    const items = data.filter(d=>d.t===tier.id);
+    if(!items.length) return;
+    const globalIdxs = items.map(d=>DATA.indexOf(d));
+    html += `<div class="tier-block">
+      <div class="tier-hdr">
+        <span class="tier-badge" style="background:${tier.bg};color:${tier.tc}">${tier.short}</span>
+        <span class="tier-title">${tier.label}</span>
+        <span class="tier-count">${items.length} entit${items.length===1?"y":"ies"}</span>
+      </div>
+      <div class="cards">${items.map((d,i)=>cardHTML(d,globalIdxs[i])).join("")}</div>
+    </div>`;
+  });
+  content.innerHTML = html;
+}
+
+window.toggle = function(idx) { expanded[idx]=!expanded[idx]; render(); };
+
+populateFilters();
+renderLegend();
+render();
+</script>
+</body>
+</html>
